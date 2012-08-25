@@ -1,0 +1,136 @@
+#!/usr/bin/env python
+
+import os, sys, struct, cjson, stat
+from os.path import join
+
+here = os.path.dirname(os.path.abspath(__file__))
+
+global_shunts = '''
+Function.prototype.property = function(prop, desc) {
+    Object.defineProperty(this.prototype, prop, desc);
+};
+'''
+
+def packModules(path):
+    result = ''
+    template = '''
+    loader.define('%s', function(exports, require, get){
+    %s});
+    '''
+    fs_base = join(here, path)
+    for path, dirs, names in os.walk(fs_base):
+        relpath = path[len(fs_base):]
+        if not relpath.startswith('/'):
+            relpath = '/' + relpath
+
+        for name in names:
+            if name.endswith('.js'):
+                packpath = join(relpath, name)
+                fspath = join(path, name)
+                data = open(fspath).read()
+                module = template % (packpath, data)
+                result += module
+    return result
+
+def packCode(app, target, targetname):
+    if not requireCodePack([app, 'extra', 'lib'], target, targetname):
+        return
+
+    print 'packing code: %s' % target
+    result = ''
+    result += global_shunts
+    for path, dirs, names in os.walk(join(here, 'extra')):
+        for name in names:
+            if name.endswith('.js'):
+                data = open(join(path, name)).read()
+                result += '\n%s;\n' % data
+
+    result += packModules(app)
+    result += packModules('lib')
+
+    result += '\n$(function(){loader.main()});'
+    open(join(here, target, targetname), 'w').write(result)
+
+def requireCodePack(apps, target, targetname):
+    target_path = join(here, target, targetname)
+    if not os.path.exists(target_path):
+        return True
+
+    for app in apps:
+        target_mtime = os.stat(target_path)[stat.ST_MTIME]
+        for path, dirs, names in os.walk(join(here, app)):
+            for name in names:
+                if name.endswith('.js'):
+                    code_mtime = os.stat(join(path, name))[stat.ST_MTIME]
+                    if code_mtime > target_mtime:
+                        return True
+    return False
+
+binary_types = [
+    'png', 'jpg', 'ogg',
+    'indices', 'vertices', 'model', 'mesh', 'bones',
+]
+text_types = ['txt', 'shader', 'shaderlib']
+packtypes = binary_types + text_types + ['json']
+
+def requireAssetPack(app, target, targetname):
+    for app in [app, 'lib']:
+        fs_base = join(here, app)
+        target_path = join(here, target, targetname)
+        if not os.path.exists(target_path):
+            return True
+        target_mtime = os.stat(target_path)[stat.ST_MTIME]
+     
+        for path, dirs, names in os.walk(fs_base):
+            for name in names:
+                ext = os.path.splitext(name)[1].lstrip('.')
+                fspath = join(path, name)
+                if ext in packtypes:
+                    asset_mtime = os.stat(fspath)[stat.ST_MTIME]
+                    if asset_mtime > target_mtime:
+                        return True
+    return False
+
+def packAssets(app, target, targetname):
+    if not requireAssetPack(app, target, targetname):
+        return
+
+    print 'packing assets: %s' % target
+    chunks = ''
+    meta = {}
+    for app in [app, 'lib']:
+        fs_base = join(here, app)
+        for path, dirs, names in os.walk(fs_base):
+            relpath = path[len(fs_base):]
+            if not relpath.startswith('/'):
+                relpath = '/' + relpath
+            for name in names:
+                ext = os.path.splitext(name)[1].lstrip('.')
+                packpath = join(relpath, name)
+                fspath = join(path, name)
+                if ext in binary_types:
+                    data = open(fspath, 'rb').read()
+                    offset = len(chunks)
+                    size = len(data)
+                    chunks += data
+                    meta[packpath] = {
+                        'offset': offset,
+                        'size': size,
+                    }
+                elif ext in text_types:
+                    meta[packpath] = open(fspath, 'r').read()
+                elif ext == 'json':
+                    meta[packpath] = cjson.decode(open(fspath, 'r').read())
+
+    metadata = cjson.encode(meta)
+    metasize = struct.pack('I', len(metadata))
+    open(join(here, target, targetname), 'wb').write('PACK'+metasize+metadata+chunks)
+
+def pack(app, target, codename=None, assetname=None):
+    if codename:
+        packCode(app, target, codename)
+    if assetname:
+        packAssets(app, target, assetname)
+
+if __name__ == '__main__':
+    pack('src', 'www', 'code.js', 'assets.pack')

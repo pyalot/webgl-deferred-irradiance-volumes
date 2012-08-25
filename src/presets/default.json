@@ -1,0 +1,116 @@
+{
+  "remembered": {
+    "Default": {
+      "0": {
+        "resolution_label": "1:2 default",
+        "show_fps": false
+      },
+      "1": {
+        "inputGamma": 1.8,
+        "outputGamma": 1.99100719424,
+        "brightness": 1.51079136691,
+        "saturation": 1.0071942446
+      },
+      "2": {
+        "orientation": 104,
+        "elevation": 53.8686131387
+      },
+      "3": {
+        "draw_probes": false,
+        "gi": 0.762589928058,
+        "di": 0.172661870504,
+        "ao": 0.700729927007
+      },
+      "4": {
+        "sunColor": [
+          255,
+          248.823529412,
+          202.5
+        ],
+        "sunRadiance": 9.4964028777,
+        "skyColor": [
+          9.90196078431,
+          66.9838523645,
+          252.5
+        ],
+        "skyRadiance": 1.0071942446,
+        "giGain": 0.7,
+        "bounces": 3
+      },
+      "5": {
+        "c1": 1.15107913669,
+        "c2": 2.41726618705,
+        "band3": 0.517985611511,
+        "c3": 3.13669064748,
+        "c4": 0.546762589928,
+        "c5": 1.87050359712
+      },
+      "6": {
+        "x": -9.38136276391469,
+        "y": 3.176749303559157,
+        "z": 0.09001503384880467,
+        "go": 92.0781892939057,
+        "p": 0.2106932539339603
+      },
+      "7": {
+        "subpixel_aa": 0.75,
+        "contrast_treshold": 0.166,
+        "edge_treshold": 0
+      },
+      "8": {
+        "show_all": false,
+        "window_label": "Antialiased",
+        "show_label": false
+      }
+    }
+  },
+  "folders": {
+    "Performance": {
+      "folders": {},
+      "preset": "Default",
+      "closed": false
+    },
+    "Picture": {
+      "folders": {},
+      "preset": "Default",
+      "closed": false
+    },
+    "Compositing": {
+      "folders": {},
+      "preset": "Default",
+      "closed": true
+    },
+    "Lighting": {
+      "folders": {},
+      "preset": "Default",
+      "closed": true
+    },
+    "Harmonics": {
+      "folders": {},
+      "preset": "Default",
+      "closed": true
+    },
+    "Camera": {
+      "folders": {},
+      "preset": "Default",
+      "closed": true
+    },
+    "Sun": {
+      "folders": {},
+      "preset": "Default",
+      "closed": false
+    },
+    "Antialias": {
+      "folders": {},
+      "preset": "Default",
+      "closed": true
+    },
+    "Views": {
+      "folders": {},
+      "preset": "Default",
+      "closed": false
+    }
+  },
+  "preset": "Default",
+  "closed": true
+}

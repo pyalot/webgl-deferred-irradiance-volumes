@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+
+import os, sys, stat, subprocess
+from datetime import datetime
+
+here = os.path.dirname(os.path.abspath(__file__))
+
+message_count = 0
+def message(text):
+    global message_count
+    now = datetime.now().strftime('%H:%M:%S')
+    print '[%04i %s] %s' % (message_count, now, text)
+    message_count+=1
+
+def error(text):
+    sys.stdout.write('\x1b[31m%s\x1b[39m' % text)
+    sys.stdout.flush()
+
+def coffee_compile(path, bare):
+    message('compiling: %s' % path)
+    if bare:
+        command = ['coffee', '--compile', '--bare', path]
+    else:
+        command = ['coffee', '--compile', path]
+
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = process.communicate()
+    if process.returncode:
+        error(err)
+
+def get_mtime(name):
+    return os.stat(name)[stat.ST_MTIME]
+
+def listfiles(folder, *exts):
+    for path, dirs, names in os.walk(os.path.join(here, folder)):
+        for name in names:
+            ext = os.path.splitext(name)[-1].lstrip('.')
+            if ext in exts:
+                yield path, name, os.path.join(path, name)
+
+def check_files(folder, bare):
+    for path, name, loc in listfiles(folder, 'coffee'):
+        js_path = os.path.join(path, os.path.splitext(name)[0] + '.js')
+        coffee_mtime = get_mtime(loc)
+        if os.path.exists(js_path):
+            js_mtime = get_mtime(js_path)
+            if coffee_mtime > js_mtime:
+                coffee_compile(loc, bare=bare)
+        else:
+            coffee_compile(loc, bare=bare)
+
+if __name__ == '__main__':
+    check_files('src', bare=True)
+    check_files('lib', bare=True)
+    check_files('extra', bare=False)

@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+
+'''
+Copy this into your bin directory for convenient building
+'''
+
+import os, subprocess
+
+here = os.getcwd()
+folders = here.split('/')
+
+while folders:
+    path = '/'.join(folders)
+    scriptpath = os.path.join(path, 'build.sh')
+    if os.path.exists(scriptpath):
+        os.chdir(path)
+        subprocess.call(['bash', 'build.sh'])
+        break
+    folders.pop()

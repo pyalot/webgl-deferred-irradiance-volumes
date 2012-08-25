@@ -1,0 +1,192 @@
+{
+  "remembered": {
+    "Apple Gamma": {
+      "1": {
+        "outputGamma": 2.5,
+        "brightness": 1.3218978102189782,
+        "saturation": 0.95071942446
+      }
+    },
+    "Default": {
+      "0": {
+        "resolution_label": "1:2 default",
+        "show_fps": false
+      },
+      "1": {
+        "inputGamma": 1.8,
+        "outputGamma": 2.1,
+        "brightness": 1.0218978102189782,
+        "saturation": 1.0071942446
+      },
+      "2": {
+        "orientation": 102.48175182481751,
+        "elevation": 51.240875912408754
+      },
+      "3": {
+        "draw_probes": false,
+        "gi": 0.9927007299270073,
+        "di": 0.8321167883211679,
+        "ao": 0.700729927007
+      },
+      "4": {
+        "sunColor": [
+          255,
+          248.823529412,
+          202.5
+        ],
+        "sunRadiance": 5.5,
+        "skyColor": [
+            0,
+            35, 
+            255
+        ],
+        "skyRadiance": 0.8,
+        "giGain": 1.6058394160583942,
+        "bounces": 3
+      },
+      "5": {
+        "c1": 1.0359712230215827,
+        "c2": 1.841726618705036,
+        "band3": 0.8345323741007195,
+        "c3": 2.935251798561151,
+        "c4": 0.5755395683453237,
+        "c5": 1.064748201438849
+      },
+      "6": {
+        "x": -9.904411786477144,
+        "y": 1.864264505425676,
+        "z": -0.5129541306187764,
+        "go": 112.499999992655,
+        "p": -4.316055717198253
+      },
+      "7": {
+        "subpixel_aa": 0.75,
+        "contrast_treshold": 0.166,
+        "edge_treshold": 0
+      },
+      "8": {
+        "show_all": false,
+        "window_label": "Antialiased",
+        "show_label": false
+      }
+    },
+    "Bright Day": {
+      "1": {
+        "brightness": 1.0218978102189782
+      },
+      "2": {
+        "orientation": 102.48175182481751,
+        "elevation": 51.240875912408754
+      },
+      "4": {
+        "sunColor": [
+          255,
+          248.823529412,
+          202.5
+        ],
+        "sunRadiance": 5.5,
+        "skyColor": [
+            0,
+            35, 
+            255
+        ],
+        "skyRadiance": 0.8
+      }
+    },
+    "Morning Mood": {
+      "1": {
+        "brightness": 1.7266187050359714
+      },
+      "2": {
+        "orientation": 102.481751825,
+        "elevation": 7.769784172661871
+      },
+      "4": {
+        "sunColor": [
+          252.5,
+          178.81776239907728,
+          138.62745098039215
+        ],
+        "sunRadiance": 2.5899280575539567,
+        "skyColor": [
+          74.63235294117646,
+          94.24163783160323,
+          217.5
+        ],
+        "skyRadiance": 0.8
+      }
+    },
+    "Noon": {
+      "1": {
+        "brightness": 1.0218978102189782
+      },
+      "2": {
+        "orientation": 160.57553956834533,
+        "elevation": 78.34532374100719
+      },
+      "4": {
+        "sunColor": [
+          255,
+          255,
+          255
+        ],
+        "sunRadiance": 6.9064748201438855,
+        "skyColor": [
+          140,
+          155.7843137254902,
+          255
+        ],
+        "skyRadiance": 2.5899280575539567
+      }
+    }
+  },
+  "folders": {
+    "Performance": {
+      "folders": {},
+      "preset": "Default",
+      "closed": false
+    },
+    "Picture": {
+      "folders": {},
+      "preset": "Default",
+      "closed": false
+    },
+    "Compositing": {
+      "folders": {},
+      "preset": "Default",
+      "closed": true
+    },
+    "Lighting": {
+      "folders": {},
+      "preset": "Default",
+      "closed": true
+    },
+    "Harmonics": {
+      "folders": {},
+      "preset": "Default",
+      "closed": true
+    },
+    "Camera": {
+      "folders": {},
+      "preset": "Default",
+      "closed": true
+    },
+    "Sun": {
+      "folders": {},
+      "preset": "Default",
+      "closed": false
+    },
+    "Antialias": {
+      "folders": {},
+      "preset": "Default",
+      "closed": true
+    },
+    "Views": {
+      "folders": {},
+      "preset": "Default",
+      "closed": false
+    }
+  },
+  "preset": "Default",
+  "closed": true
+}

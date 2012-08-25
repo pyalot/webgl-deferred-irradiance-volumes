@@ -1,0 +1,28 @@
+uniform sampler2D light_depth;
+uniform mat4 light_view, light_proj;
+uniform mat3 light_rot;
+
+float getOcclusion(vec2 uv, float z){
+    vec2 moments = texture2D(light_depth, uv).xy;
+    float p = smoothstep(z-0.02, z-0.01, moments.x);
+    float variance = moments.y - moments.x*moments.x;
+    float d = z - moments.x;
+    float p_max = variance/(variance+d*d);
+    p_max = smoothstep(0.4, 1.0, p_max);
+    return max(p, p_max);
+}
+
+float getIntensity(vec3 position, vec3 normal){
+        vec4 light_view_position = light_view * vec4(position, 1.0);
+        vec4 light_device = light_proj * light_view_position;
+        vec2 light_clip = light_device.xy/light_device.w;
+        vec2 uv = light_clip*0.5+0.5;
+        float z = -light_view_position.z/42.0;
+        
+        float occlusion = getOcclusion(uv, z);
+        float lambert = clamp((light_rot * normal).z, 0.0, 1.0);
+        return occlusion * lambert;
+}
+        
+        
+
