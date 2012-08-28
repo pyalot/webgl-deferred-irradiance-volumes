@@ -20,6 +20,6 @@ Copyright (c) 2012, Florian Boesch <pyalot@gmail.com> http://codeflow.org/
 
 WebGL Deferred Irradiance Volumes is licensed under any of the following licenses at your choosing:
 
-MIT: see mit-license
-GPL: see gplv*-license
-BSD: see bsd-license
+* MIT: see mit-license
+* GPL: see gplv*-license
+* BSD: see bsd-license
