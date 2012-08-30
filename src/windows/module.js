@@ -73,7 +73,6 @@ return Windows = (function() {
     this.show_all = false;
     this.show_label = false;
     this.needs_clear = $.browser.mozilla;
-    console.log(this.needs_clear);
     this.node = new Rendernode(this.gl, {
       front: true,
       program: get('window.shader'),

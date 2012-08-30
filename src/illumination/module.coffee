@@ -1,14 +1,47 @@
 Quad = require '/webgl/quad'
 Sphere = require '/webgl/sphere'
 {Texture2D} = require '/webgl/texture'
-
 Rendernode = require '/rendernode'
+{DeferredProbeShadowMap} = require '/depth'
 
-{DepthRender, LightmapShadowMap} = require '/depth'
-BounceModel = require 'bounce_model'
+class SHConstants extends require('/events')
+    constructor: (gui) ->
+        super()
+        gui.remember @
+        @c1 = 0.43
+        @c2 = 0.66
+        @band3 = 1.0
+        @c3 = 0.9
+        @c4 = 0.34
+        @c5 = 0.43
+        
+        @data = new Float32Array(5)
+
+        folder = gui.addFolder('Harmonics')
+        folder.add(@, 'c1', 0.0, 4.0).name('L0').onChange @change
+        folder.add(@, 'c2', 0.0, 4.0).name('L1').onChange @change
+        folder.add(@, 'band3', 0.0, 4.0).name('L2').onChange @change
+        folder.add(@, 'c3', 0.0, 4.0).name('L2m2/L2m1/L21').onChange @change
+        folder.add(@, 'c4', 0.0, 4.0).name('L20').onChange @change
+        folder.add(@, 'c5', 0.0, 4.0).name('L22').onChange @change
+        
+        @updateData()
+
+    updateData: ->
+        @data[0] = @c1
+        @data[1] = @c2
+        @data[2] = @band3 * @c3
+        @data[3] = @band3 * @c4
+        @data[4] = @band3 * @c5
+
+    change: =>
+        @updateData()
+        @trigger 'change'
     
 return class Illumination
-    constructor: (@gl, sun, @lighting, model, highresmodel, normaldepth, orientation, elevation, @shconst) ->
+    constructor: (@gl, gui, sun, sundepth, @lighting, model, normaldepth) ->
+        @shconst = new SHConstants(gui).on('change', @update)
+
         @proj = new Mat4().perspective(90, 1, 0.01, 42)
         @view = new Mat4()
 
@@ -16,6 +49,7 @@ return class Illumination
         @probesize = 16
 
         @generateProbes()
+        @renderProbes(model)
         
         @debug = new Rendernode @gl,
             program: get 'debug.shader'
@@ -26,14 +60,6 @@ return class Illumination
             cullFace: 'BACK'
             type: @gl.FLOAT #maybe, not really essential to scene quality
         
-        @lightprobes = new Rendernode @gl,
-            width: @probesize*6
-            height: @probesize*@probes.length
-            program: get 'transfer.shader'
-            drawable: quad
-            filter: 'nearest'
-            type: @gl.FLOAT #float is required due to HDR, maybe could solve this with color packing
-
         @coefficients = new Rendernode @gl,
             width: 9
             height: @probes.length
@@ -41,25 +67,38 @@ return class Illumination
             drawable: quad
             filter: 'nearest'
             type: @gl.FLOAT #float is required, otherwise bad banding and wrong colors, maybe could solve this with color packing
-        
-        @direct_light = new LightmapShadowMap gl,
+
+        @probes_shadow = new DeferredProbeShadowMap @gl,
             drawable: model
-            depthWidth: 128
-            depthHeight: 128
+            depth: sundepth
+            probes_normal: @probes_normal
+            probes_position: @probes_position
             light: sun
             blurred: true
 
-        @bounce = new Rendernode @gl,
-            width: 256
-            height: 256
-            program: get 'bounce.shader'
-            drawable: new BounceModel @gl, model, @probes
-            type: @gl.FLOAT #float is required due to additive blending
+        @probes_shadow
+            .resize(@probesize*6, @probesize*@probes.length)
+            .updateShadow()
+
+        @probes_global_illumination = new Rendernode gl,
+            width: @probesize*6
+            height: @probesize*@probes.length
+            program: get 'probes_global_illumination.shader'
             blend: 'additive'
+            type: gl.FLOAT
+            drawable: quad
+        
+        @lightprobes = new Rendernode @gl,
+            width: @probesize*6
+            height: @probesize*@probes.length
+            program: get 'composit.shader'
+            drawable: quad
+            filter: 'nearest'
+            type: @gl.FLOAT #float is required due to HDR, maybe could solve this with color packing
 
-        @renderProbes(model, highresmodel)
         @update()
-
+   
+    ## Initialization ##
     generateProbes: () ->
         @probes = []
         for i in [0...7]
@@ -97,87 +136,7 @@ return class Illumination
                 y: 12.5
                 z: 0
     
-    updateDirectLight: ->
-        @direct_light.update()
-
-    update: () ->
-        @bounce.start()
-            .clear(0, 0, 0, 1)
-            .f('gi_gain', @lighting.giGain)
-            .val2('coefficients_size', @coefficients.width, @coefficients.height)
-            .fv('shconst', @shconst.data)
-            .end()
-
-        @lightprobes
-            .start()
-            .vec3('sun_radiance', @lighting.sun_radiance)
-            .vec3('sky_radiance', @lighting.sky_radiance)
-            .sampler('texmap', @texmap)
-            .sampler('diffusemap', @diffusemap)
-            .sampler('bounce', @bounce)
-            .sampler('lightmap', @direct_light.output)
-            .draw()
-            .end()
-
-        @coefficients
-            .start()
-            .val2('lightprobes_size', @lightprobes.width, @lightprobes.height)
-            .sampler('lightprobes', @lightprobes)
-            .fv('shconst', @shconst.data)
-            .draw()
-            .end()
-
-        for i in [0...@lighting.bounces-1]
-            @bounce
-                .start()
-                .clear(0, 0, 0, 0)
-                .sampler('coefficients', @coefficients)
-                .draw()
-                .end()
-            
-            @lightprobes
-                .start()
-                .sampler('texmap', @texmap)
-                .sampler('bounce', @bounce)
-                .sampler('lightmap', @direct_light.output)
-                .draw()
-                .end()
-
-            @coefficients
-                .start()
-                .val2('lightprobes_size', @lightprobes.width, @lightprobes.height)
-                .sampler('lightprobes', @lightprobes)
-                .draw()
-                .end()
-
-
-    renderProbes: (model, highresmodel) ->
-        if get.exists 'texmap.png'
-            @texmap = new Texture2D(@gl)
-                .bind()
-                .upload(get 'texmap.png')
-                .nearest()
-                .clampToEdge()
-                .unbind()
-        else
-            @texmap = new Rendernode @gl,
-                width: @mapsize*6
-                height: @mapsize*@probes.length
-                program: get 'cubeprobe.shader'
-                drawable: model
-                depthTest: true
-                depthWrite: true
-                cullFace: 'BACK'
-                filter: 'nearest'
-                depthBuffer: true
-
-            @texmap.start().clear(0, 0, 1)
-            @texmap.mat4('proj', @proj)
-            for probe, i in @probes
-                @renderProbe(i, @texmap, null, probe.x, probe.y, probe.z)
-            @texmap.end()
-            @texmap = @texmap.output
-
+    renderProbes: (model) ->
         if get.exists 'diffusemap.jpg'
             @diffusemap = new Texture2D(@gl)
                 .bind()
@@ -200,17 +159,49 @@ return class Illumination
             @diffusemap.start().clear(0, 0, 0)
             @diffusemap.mat4('proj', @proj)
             for probe, i in @probes
-                @renderProbe(i, @diffusemap, 'diffuse_texture', probe.x, probe.y, probe.z)
+                @renderProbe(i, @diffusemap, 'diffuse_texture', probe.x, probe.y, probe.z, @mapsize)
             @diffusemap.end()
             @diffusemap = @diffusemap.output
+            
+        @probes_position = new Rendernode @gl,
+            width: @probesize*6
+            height: @probesize*@probes.length
+            program: get 'probes_position.shader'
+            drawable: model
+            depthTest: true
+            depthWrite: true
+            cullFace: 'BACK'
+            filter: 'nearest'
+            type: @gl.FLOAT
+            depthBuffer: true
 
-        #url = getURL @texmap.output.read().buffer
-        #$('<a download="texmap.bin">texmap</a>').appendTo('#ui')[0].href = url
-        #url = getURL @diffusemap.output.read().buffer
-        #$('<a download="diffusemap.bin">texmap</a>').appendTo('#ui')[0].href = url
+        @probes_position.start().clear(0, 0, 0)
+        @probes_position.mat4('proj', @proj)
+        for probe, i in @probes
+            @renderProbe(i, @probes_position, null, probe.x, probe.y, probe.z, @probesize)
+        @probes_position.end()
+        @probes_position = @probes_position.output
+        
+        @probes_normal = new Rendernode @gl,
+            width: @probesize*6
+            height: @probesize*@probes.length
+            program: get 'probes_normal.shader'
+            drawable: model
+            depthTest: true
+            depthWrite: true
+            cullFace: 'BACK'
+            filter: 'nearest'
+            type: @gl.FLOAT
+            depthBuffer: true
 
-    renderProbe: (i, node, texture_type, x, y, z) ->
-        s = @mapsize
+        @probes_normal.start().clear(0, 0, 0, 0)
+        @probes_normal.mat4('proj', @proj)
+        for probe, i in @probes
+            @renderProbe(i, @probes_normal, null, probe.x, probe.y, probe.z, @probesize)
+        @probes_normal.end()
+        @probes_normal = @probes_normal.output
+
+    renderProbe: (i, node, texture_type, x, y, z, s) ->
         offset = i*s
 
         @view.identity().translateVal3(-x, -y, -z)
@@ -231,6 +222,58 @@ return class Illumination
         @view.identity().rotatex(90).translateVal3(-x, -y, -z)
         node.viewport(s*5, offset, s, s).mat4('view', @view).drawModel(texture_type)
 
+    ## Realtime methods ##
+    updateGlobalIllumination: ->
+        @probes_global_illumination
+            .start()
+            .clear(0, 0, 0, 0)
+            .f('gi_gain', @lighting.giGain)
+            .sampler('coefficients', @coefficients)
+            .val2('coefficients_size', @coefficients.width, @coefficients.height)
+            .sampler('probes_position', @probes_position)
+            .sampler('probes_normal', @probes_normal)
+
+        for probe, i in @probes
+            @probes_global_illumination
+                .val4('lightprobe', probe.x, probe.y, probe.z, i)
+                .draw()
+
+        @probes_global_illumination.end()
+
+    updateLightprobes: ->
+        @lightprobes
+            .start()
+            .sampler('direct', @probes_shadow)
+            .sampler('global', @probes_global_illumination)
+            .sampler('albedo', @diffusemap)
+            .sampler('probes_normal', @probes_normal)
+            .vec3('sun_radiance', @lighting.sun_radiance)
+            .vec3('sky_radiance', @lighting.sky_radiance)
+            .draw()
+            .end()
+
+    updateDirectLight: ->
+        @probes_shadow.updateShadow()
+
+    updateCoefficients: ->
+        @coefficients
+            .start()
+            .val2('lightprobes_size', @lightprobes.width, @lightprobes.height)
+            .sampler('lightprobes', @lightprobes)
+            .fv('shconst', @shconst.data)
+            .draw()
+            .end()
+    
+    update: =>
+        @probes_global_illumination.start().clear().end()
+        @updateLightprobes()
+        @updateCoefficients()
+
+        for i in [0...@lighting.bounces-1]
+            @updateGlobalIllumination()
+            @updateLightprobes()
+            @updateCoefficients()
+
     drawDebug: (camera, normaldepth) ->
         @debug.start()
             .clearBoth(0, 0, 0, 0)
@@ -238,7 +281,6 @@ return class Illumination
             .sampler('normaldepth', normaldepth)
             .sampler('coefficients', @coefficients)
             .val2('coefficients_size', @coefficients.width, @coefficients.height)
-            .fv('shconst', @shconst.data)
             .mat4('proj', camera.proj)
             .mat4('view', camera.view)
 

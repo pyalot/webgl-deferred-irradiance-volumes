@@ -2,7 +2,7 @@ Rendernode = require '/rendernode'
 Blur = require '/blur'
 
 exports.DepthRender = class DepthRender
-    constructor: (gl, width, height, drawable, {blurred}={}) ->
+    constructor: (gl, width, height, drawable, @light, {blurred}={}) ->
         blurred ?= false
 
         @direct = new Rendernode gl,
@@ -15,7 +15,7 @@ exports.DepthRender = class DepthRender
             depthWrite: true
             filter: if blurred then 'nearest' else 'linear'
             type: gl.FLOAT #float is required because of depth precision
-            cullFace: 'BACK'
+            #cullFace: 'BACK'
        
         if blurred
             @blurred = new Blur gl,
@@ -24,12 +24,13 @@ exports.DepthRender = class DepthRender
                 type: gl.FLOAT
 
         @output = if @blurred then @blurred.output else @direct
+        @update()
 
-    update: (proj, view) ->
+    update: ->
         @direct.start()
             .clearBoth(0,0,0,1)
-            .mat4('proj', proj)
-            .mat4('view', view)
+            .mat4('proj', @light.proj)
+            .mat4('view', @light.view)
             .f('range', 42) #FIXME
             .draw()
             .end()
@@ -38,19 +39,14 @@ exports.DepthRender = class DepthRender
             @blurred.update(@direct)
 
 exports.DeferredShadowMap = class DeferredShadowMap
-    constructor: (gl, {drawable, depthWidth, depthHeight, @eyeNormaldepth, @light, @camera, blurred}) ->
-        @depth = new DepthRender gl, depthWidth, depthHeight, drawable, blurred:blurred
+    constructor: (gl, {drawable, @depth, @eyeNormaldepth, @light, @camera}) ->
         @output = new Rendernode gl,
             program: get 'deferred_shadow_map.shader'
             drawable: quad
 
-        @updateDepth()
-
     resize: (width, height) ->
         @output.resize width, height
-
-    updateDepth: ->
-        @depth.update @light.proj, @light.view
+        return @
 
     updateShadow: ->
         @output
@@ -65,28 +61,28 @@ exports.DeferredShadowMap = class DeferredShadowMap
             .mat3('light_rot', @light.rot)
             .draw()
             .end()
+        return @
 
-exports.LightmapShadowMap = class LightmappedShadowMap
-    constructor: (gl, {drawable, depthWidth, depthHeight, lightmapSize, @light, blurred}) ->
-        @depth = new DepthRender gl, depthWidth, depthHeight, drawable, blurred:blurred
-
-        lightmapSize ?= 256
-
+exports.DeferredProbeShadowMap = class DeferredProbeShadowMap
+    constructor: (gl, {drawable, @depth, @probes_normal, @probes_position, @light}) ->
         @output = new Rendernode gl,
-            width: lightmapSize
-            height: lightmapSize
-            program: get 'lightmap_shadow_map.shader'
-            drawable: drawable
+            program: get 'deferred_probe_shadow_map.shader'
+            drawable: quad
 
-        @update()
-    
-    update: ->
-        @depth.update @light.proj, @light.view
+    resize: (width, height) ->
+        @output.resize width, height
+        return @
+
+    updateShadow: ->
         @output
             .start()
+            .clear(1, 0, 1)
+            .sampler('probes_normal', @probes_normal)
+            .sampler('probes_position', @probes_position)
             .sampler('light_depth', @depth.output)
             .mat4('light_view', @light.view)
             .mat4('light_proj', @light.proj)
             .mat3('light_rot', @light.rot)
             .draw()
             .end()
+        return @

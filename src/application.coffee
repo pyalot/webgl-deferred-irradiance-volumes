@@ -6,11 +6,11 @@ Quad = require '/webgl/quad'
 Cube = require '/webgl/cube'
 
 Antialias = require 'antialias'
-{LowresModel, Model} = require 'model'
+Model = require 'model'
 Illumination = require 'illumination'
 Rendernode = require '/rendernode'
 Windows = require '/windows'
-{DeferredShadowMap} = require '/depth'
+{DepthRender, DeferredShadowMap} = require '/depth'
 Sun = require 'sun'
 DeferredModel = require 'deferred_model'
 SSAO = require 'ssao'
@@ -85,40 +85,6 @@ class PictureSettings
         folder.add(@, 'brightness', 0.0, 10.0).name('Exposure')
         folder.add(@, 'saturation', 0.0, 4.0).name('Saturation')
 
-class SHConstants
-    constructor: (@app, gui) ->
-        gui.remember @
-        @c1 = 0.43
-        @c2 = 0.66
-        @band3 = 1.0
-        @c3 = 0.9
-        @c4 = 0.34
-        @c5 = 0.43
-        
-        @data = new Float32Array(5)
-
-        folder = gui.addFolder('Harmonics')
-        folder.add(@, 'c1', 0.0, 4.0).name('L0').onChange @change
-        folder.add(@, 'c2', 0.0, 4.0).name('L1').onChange @change
-        folder.add(@, 'band3', 0.0, 4.0).name('L2').onChange @change
-        folder.add(@, 'c3', 0.0, 4.0).name('L2m2/L2m1/L21').onChange @change
-        folder.add(@, 'c4', 0.0, 4.0).name('L20').onChange @change
-        folder.add(@, 'c5', 0.0, 4.0).name('L22').onChange @change
-        
-        @updateData()
-
-    updateData: ->
-        @data[0] = @c1
-        @data[1] = @c2
-        @data[2] = @band3 * @c3
-        @data[3] = @band3 * @c4
-        @data[4] = @band3 * @c5
-
-    change: =>
-        @updateData()
-        @app.lightChange()
-
-
 makeStat = (mode, offset) ->
     stats = new Stats()
     stats.setMode(mode)
@@ -141,7 +107,6 @@ exports.Application = class
         $('<div id="controls"></div>')
             .css('margin', 10)
             .appendTo('#ui')
-        Rendernode.stateDefaults(gl)
         
         gui = @gui = new dat.GUI
             load: get 'presets/new.json'
@@ -189,7 +154,6 @@ exports.Application = class
         @sun = new Sun(gui).on('change', @sunChanged)
         @compositing_control = new CompositingControl(gui)
         @lighting = new Lighting(gui).on('change', @lightChange)
-        @shconst = new SHConstants @, gui
 
         loading.hide()
         @near = 0.1
@@ -197,7 +161,6 @@ exports.Application = class
 
         @camera = new camera.FlyCam(gui: gui, near: @near, far: @far, x: -10, y:7, z:-1.5, o:100, p:20)
         @sponza = new Model gl
-        @lowres = new LowresModel gl
 
         @view_normaldepth = new Rendernode gl,
             program: get 'normaldepth.shader'
@@ -211,16 +174,14 @@ exports.Application = class
 
         @ssao = new SSAO gl, @view_normaldepth
         
+        @sundepth = new DepthRender gl, 512, 512, @sponza, @sun, blurred:true
         @direct_light = new DeferredShadowMap gl,
-            drawable: @sponza
-            depthWidth: 512
-            depthHeight: 512
             eyeNormaldepth: @view_normaldepth
+            depth: @sundepth
             light: @sun
             camera: @camera
-            blurred: true
 
-        @illumination = new Illumination gl, @sun, @lighting, @lowres, @sponza, @view_normaldepth, @sun.orientation, @sun.elevation, @shconst
+        @illumination = new Illumination gl, gui, @sun, @sundepth, @lighting, @sponza, @view_normaldepth
        
         @albedo = new Rendernode gl,
             program: get 'albedo.shader'
@@ -246,25 +207,25 @@ exports.Application = class
             drawable: quad
 
         @antialias = new Antialias gl, gui, @composit
-        
+       
         @windows = new Windows gl, gui, [
-                {label: 'Scene depth from sun', affine: [1, 0], gamma: false, tex: @direct_light.depth.output},
-                {label: 'Scene normal/depth', affine: [0.5, 0.5], gamma: false, tex: @view_normaldepth},
-                {label: 'Scene depth moments', gamma: false, tex: @ssao.blur.output},
-                {label: 'Direct Illumination Lightmap', tex: @illumination.direct_light.output},
-                {label: 'Global Illumination Lightmap', diva: true, tex: @illumination.bounce},
-                {label: 'Lightmap Dictionary', tex: @illumination.texmap},
-                {label: 'Albedo Probe Values', tex: @illumination.diffusemap},
-                {label: 'Light Probes', tex: @illumination.lightprobes},
+                {label: 'Scene depth from sun', affine: [1, 0], gamma: false, tex: @sundepth.output},
+                {label: 'Probes Albedo', tex: @illumination.diffusemap},
+                {label: 'Probes Positions', gamma: false, affine: [1/21, 0.5], tex: @illumination.probes_position},
+                {label: 'Probes Normal', gamma: false, affine: [0.5, 0.5], tex: @illumination.probes_normal},
+                {label: 'Probes Shadow', tex: @illumination.probes_shadow.output},
+                {label: 'Probes Global Illumination', diva: true, tex: @illumination.probes_global_illumination.output},
+                {label: 'Probes', tex: @illumination.lightprobes.output},
                 {label: 'Spherical Harmonics Coefficients', tex: @illumination.coefficients},
+                {label: 'Scene normal/depth', affine: [0.5, 0.5], gamma: false, tex: @view_normaldepth},
                 {label: 'Albedo', tex: @albedo},
+                {label: 'Scene depth moments', gamma: false, tex: @ssao.blur.output},
                 {label: 'SSAO', gamma: false, tex: @ssao.output},
                 {label: 'Direct Illumination', tex: @direct_light.output},
                 {label: 'Global Illumination', diva: true, tex: @global_illumination},
                 {label: 'Composited', gamma: false, tex: @composit},
                 {label: 'Antialiased', gamma: false, tex: @antialias.node},
             ]
-       
 
         @target_width = @canvas.width()
         @current_width = @target_width
@@ -276,7 +237,7 @@ exports.Application = class
         $('div.dg > ul').css('margin-top', 0)
 
     sunChanged: =>
-        @direct_light.updateDepth()
+        @sundepth.update()
         @illumination.updateDirectLight()
         @lightChange()
 
@@ -341,7 +302,6 @@ exports.Application = class
         @camera.update()
 
     draw: ->
-        #@illumination.update() #TODO
         @view_normaldepth
             .clear(0, 0, 0, 100)
             .start()
@@ -365,7 +325,6 @@ exports.Application = class
       
         @global_illumination.start()
             .f('gi_gain', @lighting.giGain)
-            .fv('shconst', @shconst.data)
             .sampler('normaldepth', @view_normaldepth)
             .mat4('proj', @camera.proj)
             .mat4('view', @camera.view)

@@ -52,21 +52,7 @@ Materials = class Materials
             return a[type].id - b[type].id
         return result
 
-exports.LowresModel = class LowresModel extends require('/webgl/drawable')
-    attribs: ['position', 'texcoord', 'normal']
-    pointers: [
-        {name: 'position', size: 3, offset: 0, stride: 8},
-        {name: 'texcoord', size: 2, offset: 3, stride: 8},
-        {name: 'normal', size: 3, offset: 5, stride: 8},
-    ]
-        
-    constructor: (@gl) ->
-        super()
-        @vertices = new Float32Array(get('lowres.vertices'))
-        @size = @vertices.length/8
-        @upload @vertices
-   
-exports.Model = class Model extends require('/webgl/drawable')
+return class Model extends require('/webgl/drawable')
     attribs: ['position', 'texcoord', 'normal']
     pointers: [
         {name: 'position', size: 3, offset: 0, stride: 8},
@@ -247,13 +233,3 @@ exports.Model = class Model extends require('/webgl/drawable')
         end = gettime()
         #console.log 'build vertices', (end - start)*1000
         return result
-
-    '''
-    draw: (shader) ->
-        if shader then @setPointersForShader shader
-        for material in @materials
-            #@gl.drawArrays @mode, @first, @size
-            @gl.drawArrays @mode, material.start, material.size
-        if shader then @disableAttribs shader
-        return @
-    '''

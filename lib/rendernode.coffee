@@ -10,15 +10,6 @@ class State
         @alphaToCoverage = false
         @blend = false
 
-    setDefaults: ->
-        @gl.disable @gl.DEPTH_TEST
-        @gl.depthMask false
-        @gl.cullFace @gl.BACK
-        @gl.disable @gl.CULL_FACE
-        @gl.disable @gl.SAMPLE_ALPHA_TO_COVERAGE
-        @gl.disable @gl.BLEND
-        return @
-
     set: ->
         if @depthTest
             @gl.enable @gl.DEPTH_TEST
@@ -51,12 +42,7 @@ class State
         if @alphaToCoverage then @gl.disable @gl.SAMPLE_ALPHA_TO_COVERAGE
         return @
         
-default_state = null
-
 return class Rendernode
-    @stateDefaults = (gl) ->
-        default_state = new State(gl).setDefaults()
-
     constructor: (@gl, {@width, @height, @program, @drawable, @type, @front, depthTest, depthWrite, cullFace, @depthBuffer, blend, @filter, @channels, @format, @hdrClear}) ->
         @xoff = 0
         @yoff = 0
@@ -196,6 +182,10 @@ return class Rendernode
 
     val2: (name, x, y) ->
         @program.val2(name, x, y)
+        return @
+    
+    val4: (name, x, y, z, w) ->
+        @program.val4(name, x, y, z, w)
         return @
 
     clear: (r=0, g=0, b=0, a=1) ->
