@@ -4,12 +4,11 @@ makeURL = (blob) ->
     return URL.createObjectURL blob
 
 makeBlob = (data, type) ->
-    builder = new BlobBuilder()
-    builder.append(data)
-    blob = builder.getBlob(type)
+    #builder = new BlobBuilder()
+    #builder.append(data)
+    #blob = builder.getBlob(type)
     #is recommended, but doesn't work in either Firefox or Chrome o_O
-    #blob = new Blob(data, type)
-    #return blob
+    blob = new Blob([data], type:type)
     return blob
 
 window.getURL = (data) ->

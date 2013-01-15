@@ -9,10 +9,10 @@
   };
 
   makeBlob = function(data, type) {
-    var blob, builder;
-    builder = new BlobBuilder();
-    builder.append(data);
-    blob = builder.getBlob(type);
+    var blob;
+    blob = new Blob([data], {
+      type: type
+    });
     return blob;
   };
 

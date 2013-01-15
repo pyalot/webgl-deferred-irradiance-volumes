@@ -322,10 +322,10 @@ var Stats = function () {
   };
 
   makeBlob = function(data, type) {
-    var blob, builder;
-    builder = new BlobBuilder();
-    builder.append(data);
-    blob = builder.getBlob(type);
+    var blob;
+    blob = new Blob([data], {
+      type: type
+    });
     return blob;
   };
 
@@ -1761,7 +1761,7 @@ exports.Application = (function() {
     });
     gui.remember(this);
     this.gui_width = gui.width = 370;
-    this.gui.closed = true;
+    this.gui.closed = false;
     this.fps = makeStat(0, 0);
     this.rtime = makeStat(1, 80);
     this.gui_closed = gui.closed;

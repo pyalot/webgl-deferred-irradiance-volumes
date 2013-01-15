@@ -148,7 +148,7 @@ exports.Application = class
 
         gui.remember @
         @gui_width = gui.width = 370
-        @gui.closed = true
+        @gui.closed = false
         @fps = makeStat(0, 0)
         @rtime = makeStat(1, 80)
         @gui_closed = gui.closed
