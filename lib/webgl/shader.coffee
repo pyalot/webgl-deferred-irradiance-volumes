@@ -1,9 +1,6 @@
 directives = [
     'precision highp int;',
     'precision highp float;',
-    'precision highp vec2;',
-    'precision highp vec3;',
-    'precision highp vec4;',
 ]
 
 in_use = null
