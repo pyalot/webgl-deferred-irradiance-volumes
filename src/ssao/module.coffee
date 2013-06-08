@@ -5,10 +5,10 @@ return class SSAO
     constructor: (gl, @normaldepth) ->
         @moments = new Rendernode gl,
             program: get 'moments.shader'
-            type: gl.FLOAT
+            type: floatExt.type
             drawable: quad
 
-        @blur = new Blur gl, type: gl.FLOAT
+        @blur = new Blur gl, type: floatExt.type
 
         @output = new Rendernode gl,
             program: get 'ssao.shader'

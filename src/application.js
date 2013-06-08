@@ -231,7 +231,7 @@ exports.Application = (function() {
       depthTest: true,
       depthWrite: true,
       cullFace: 'BACK',
-      type: gl.FLOAT,
+      type: floatExt.type,
       hdrClear: true
     });
     this.ssao = new SSAO(gl, this.view_normaldepth);
@@ -257,7 +257,7 @@ exports.Application = (function() {
       drawable: new DeferredModel(gl, this.illumination.probes),
       cullFace: 'FRONT',
       blend: 'additive',
-      type: gl.FLOAT,
+      type: floatExt.type,
       depthBuffer: this.view_normaldepth.depth,
       depthWrite: false,
       depthTest: 'GEQUAL'

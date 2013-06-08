@@ -9,16 +9,16 @@
   };
 
   makeBlob = function(data, type) {
-    var blob, builder;
-    builder = new BlobBuilder();
-    builder.append(data);
-    blob = builder.getBlob(type);
+    var blob;
+    blob = new Blob([data], {
+      type: type
+    });
     return blob;
   };
 
-  window.getURL = function(data) {
+  window.getURL = function(data, mime) {
     var blob;
-    blob = makeBlob(data);
+    blob = makeBlob(data, mime);
     return makeURL(blob);
   };
 
@@ -245,7 +245,7 @@
                 decode = hooks[matcher];
                 if (name.match(matcher)) {
                   decoding += 1;
-                  decode(dst, function(result) {
+                  decode(name, dst, function(result) {
                     decoded += 1;
                     files[name] = result;
                     if (progress) {
@@ -265,7 +265,7 @@
               for (matcher in hooks) {
                 decode = hooks[matcher];
                 if (name.match(matcher)) {
-                  decode(info, function(result) {
+                  decode(name, info, function(result) {
                     return files[name] = result;
                   });
                   return;

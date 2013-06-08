@@ -11,11 +11,11 @@ return SSAO = (function() {
     this.normaldepth = normaldepth;
     this.moments = new Rendernode(gl, {
       program: get('moments.shader'),
-      type: gl.FLOAT,
+      type: floatExt.type,
       drawable: quad
     });
     this.blur = new Blur(gl, {
-      type: gl.FLOAT
+      type: floatExt.type
     });
     this.output = new Rendernode(gl, {
       program: get('ssao.shader'),

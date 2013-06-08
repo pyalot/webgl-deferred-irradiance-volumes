@@ -14,14 +14,14 @@ exports.DepthRender = class DepthRender
             depthTest: true
             depthWrite: true
             filter: if blurred then 'nearest' else 'linear'
-            type: gl.FLOAT #float is required because of depth precision
+            type: floatExt.type #float is required because of depth precision
             #cullFace: 'BACK'
        
         if blurred
             @blurred = new Blur gl,
                 width: width
                 height: height
-                type: gl.FLOAT
+                type: floatExt.type
 
         @output = if @blurred then @blurred.output else @direct
         @update()

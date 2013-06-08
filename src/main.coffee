@@ -2,6 +2,8 @@ audio = require 'audio'
 loading = require 'loading'
 Shader = require 'webgl/shader'
 Quad = require 'webgl/quad'
+require 'webgl-nuke-vendor-prefix'
+require 'webgl-texture-float-extension-shims'
 
 #crashes firefox
 #worker = new Worker('worker.js')
@@ -10,12 +12,18 @@ Quad = require 'webgl/quad'
 #    console.log event
 
 load_hooks =
-    '\.jpg$|\.jpeg$|\.gif$|\.png': (buffer, callback) ->
+    '\.jpg$|\.jpeg$|\.gif$|\.png': (name, buffer, callback) ->
+        ext =name.split('.').pop()
+        switch ext
+            when 'png' then mime = 'image/png'
+            when 'gif' then mime = 'image/gif'
+            when 'jpg', 'jpeg' then mime = 'image/jpeg'
+                
         image = new Image()
-        image.src = getURL(buffer)
+        image.src = getURL(buffer, mime)
         image.onload = ->
             callback image
-    '\.mpg$|\.ogg$|\.wav$': (buffer, callback) ->
+    '\.mpg$|\.ogg$|\.wav$': (name, buffer, callback) ->
         audio.decode buffer, (result) ->
             callback result
 
@@ -74,6 +82,7 @@ exports.main = ->
 
     if window.gl
         window.quad = new Quad window.gl
+        window.floatExt = window.gl.getFloatExtension require: ['renderable', 'filterable'], prefer: ['single']
 
         stddev = gl.getExtension 'OES_standard_derivatives'
         fptex = gl.getExtension 'OES_texture_float'

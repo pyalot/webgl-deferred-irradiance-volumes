@@ -40,5 +40,6 @@ fragment:
         vec3 eye_dir = normalize(vViewPosition);
         float displacement = dot(eye_dir, -(view_rot*normal)) * bumpheight*0.05;
 
-        gl_FragColor = vec4(perturbed_normal, length(vViewPosition)-displacement);
+        //gl_FragColor = vec4(perturbed_normal, length(vViewPosition)-displacement);
+        gl_FragColor = vec4(normal, length(vViewPosition));
     }

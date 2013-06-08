@@ -1,9 +1,11 @@
 directives = [
+    '#ifdef GL_FRAGMENT_PRECISION_HIGH',
     'precision highp int;',
     'precision highp float;',
-    'precision highp vec2;',
-    'precision highp vec3;',
-    'precision highp vec4;',
+    '#else',
+    'precision mediump int;',
+    'precision mediump float;',
+    '#endif',
 ]
 
 in_use = null

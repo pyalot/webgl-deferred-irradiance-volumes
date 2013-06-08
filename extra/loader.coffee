@@ -4,16 +4,15 @@ makeURL = (blob) ->
     return URL.createObjectURL blob
 
 makeBlob = (data, type) ->
-    builder = new BlobBuilder()
-    builder.append(data)
-    blob = builder.getBlob(type)
+    #builder = new BlobBuilder()
+    #builder.append(data)
+    #blob = builder.getBlob(type)
     #is recommended, but doesn't work in either Firefox or Chrome o_O
-    #blob = new Blob(data, type)
-    #return blob
+    blob = new Blob([data], type:type)
     return blob
 
-window.getURL = (data) ->
-    blob = makeBlob data
+window.getURL = (data, mime) ->
+    blob = makeBlob data, mime
     return makeURL blob
 
 resolvePath = (base, path) ->
@@ -180,7 +179,7 @@ window.loader =
                         for matcher, decode of hooks
                             if name.match(matcher)
                                 decoding += 1
-                                decode dst, (result) ->
+                                decode name, dst, (result) ->
                                     decoded += 1
                                     files[name] = result
                                     if progress then progress(0.5+(decoded/decoding)*0.5, 'decode')
@@ -191,7 +190,7 @@ window.loader =
                     if hooks
                         for matcher, decode of hooks
                             if name.match(matcher)
-                                decode info, (result) ->
+                                decode name, info, (result) ->
                                     files[name] = result
                                 return
                     files[name] = info

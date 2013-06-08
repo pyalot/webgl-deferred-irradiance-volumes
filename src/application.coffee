@@ -169,7 +169,7 @@ exports.Application = class
             depthTest: true
             depthWrite: true
             cullFace: 'BACK' #disabled because of mesh gaps
-            type: gl.FLOAT #float is required to avoid banding issues (tried packing, doesn't come out well)
+            type: floatExt.type #float is required to avoid banding issues (tried packing, doesn't come out well)
             hdrClear: true
 
         @ssao = new SSAO gl, @view_normaldepth
@@ -190,14 +190,14 @@ exports.Application = class
             depthTest: true
             depthWrite: true
             #cullFace: 'BACK' #disabled because of mesh gaps
-            #type: gl.FLOAT #not really required, adds little, the source is bytes anyway
+            #type: floatExt.type #not really required, adds little, the source is bytes anyway
 
         @global_illumination = new Rendernode gl,
             program: get 'global_illumination.shader'
             drawable: new DeferredModel gl, @illumination.probes
             cullFace: 'FRONT'
             blend: 'additive'
-            type: gl.FLOAT #float is required because of additive summation, does not yield a perf benefit
+            type: floatExt.type #float is required because of additive summation, does not yield a perf benefit
             depthBuffer: @view_normaldepth.depth # early z gives some performance
             depthWrite: false
             depthTest: 'GEQUAL'

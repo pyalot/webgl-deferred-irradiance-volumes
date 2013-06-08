@@ -79,7 +79,7 @@ return Illumination = (function() {
       depthTest: true,
       depthWrite: true,
       cullFace: 'BACK',
-      type: this.gl.FLOAT
+      type: floatExt.type
     });
     this.coefficients = new Rendernode(this.gl, {
       width: 9,
@@ -87,7 +87,7 @@ return Illumination = (function() {
       program: get('harmonics.shader'),
       drawable: quad,
       filter: 'nearest',
-      type: this.gl.FLOAT
+      type: floatExt.type
     });
     this.probes_shadow = new DeferredProbeShadowMap(this.gl, {
       drawable: model,
@@ -103,7 +103,7 @@ return Illumination = (function() {
       height: this.probesize * this.probes.length,
       program: get('probes_global_illumination.shader'),
       blend: 'additive',
-      type: gl.FLOAT,
+      type: floatExt.type,
       drawable: quad
     });
     this.lightprobes = new Rendernode(this.gl, {
@@ -112,7 +112,7 @@ return Illumination = (function() {
       program: get('composit.shader'),
       drawable: quad,
       filter: 'nearest',
-      type: this.gl.FLOAT
+      type: floatExt.type
     });
     this.update();
   }
@@ -198,7 +198,7 @@ return Illumination = (function() {
       depthWrite: true,
       cullFace: 'BACK',
       filter: 'nearest',
-      type: this.gl.FLOAT,
+      type: floatExt.type,
       depthBuffer: true
     });
     this.probes_position.start().clear(0, 0, 0);
@@ -219,7 +219,7 @@ return Illumination = (function() {
       depthWrite: true,
       cullFace: 'BACK',
       filter: 'nearest',
-      type: this.gl.FLOAT,
+      type: floatExt.type,
       depthBuffer: true
     });
     this.probes_normal.start().clear(0, 0, 0, 0);

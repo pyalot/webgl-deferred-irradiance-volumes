@@ -58,7 +58,7 @@ return class Illumination
             depthTest: true
             depthWrite: true
             cullFace: 'BACK'
-            type: @gl.FLOAT #maybe, not really essential to scene quality
+            type: floatExt.type #maybe, not really essential to scene quality
         
         @coefficients = new Rendernode @gl,
             width: 9
@@ -66,7 +66,7 @@ return class Illumination
             program: get 'harmonics.shader'
             drawable: quad
             filter: 'nearest'
-            type: @gl.FLOAT #float is required, otherwise bad banding and wrong colors, maybe could solve this with color packing
+            type: floatExt.type #float is required, otherwise bad banding and wrong colors, maybe could solve this with color packing
 
         @probes_shadow = new DeferredProbeShadowMap @gl,
             drawable: model
@@ -85,7 +85,7 @@ return class Illumination
             height: @probesize*@probes.length
             program: get 'probes_global_illumination.shader'
             blend: 'additive'
-            type: gl.FLOAT
+            type: floatExt.type
             drawable: quad
         
         @lightprobes = new Rendernode @gl,
@@ -94,7 +94,7 @@ return class Illumination
             program: get 'composit.shader'
             drawable: quad
             filter: 'nearest'
-            type: @gl.FLOAT #float is required due to HDR, maybe could solve this with color packing
+            type: floatExt.type #float is required due to HDR, maybe could solve this with color packing
 
         @update()
    
@@ -172,7 +172,7 @@ return class Illumination
             depthWrite: true
             cullFace: 'BACK'
             filter: 'nearest'
-            type: @gl.FLOAT
+            type: floatExt.type
             depthBuffer: true
 
         @probes_position.start().clear(0, 0, 0)
@@ -191,7 +191,7 @@ return class Illumination
             depthWrite: true
             cullFace: 'BACK'
             filter: 'nearest'
-            type: @gl.FLOAT
+            type: floatExt.type
             depthBuffer: true
 
         @probes_normal.start().clear(0, 0, 0, 0)

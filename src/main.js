@@ -9,16 +9,32 @@ Shader = require('webgl/shader');
 
 Quad = require('webgl/quad');
 
+require('webgl-nuke-vendor-prefix');
+
+require('webgl-texture-float-extension-shims');
+
 load_hooks = {
-  '\.jpg$|\.jpeg$|\.gif$|\.png': function(buffer, callback) {
-    var image;
+  '\.jpg$|\.jpeg$|\.gif$|\.png': function(name, buffer, callback) {
+    var ext, image, mime;
+    ext = name.split('.').pop();
+    switch (ext) {
+      case 'png':
+        mime = 'image/png';
+        break;
+      case 'gif':
+        mime = 'image/gif';
+        break;
+      case 'jpg':
+      case 'jpeg':
+        mime = 'image/jpeg';
+    }
     image = new Image();
-    image.src = getURL(buffer);
+    image.src = getURL(buffer, mime);
     return image.onload = function() {
       return callback(image);
     };
   },
-  '\.mpg$|\.ogg$|\.wav$': function(buffer, callback) {
+  '\.mpg$|\.ogg$|\.wav$': function(name, buffer, callback) {
     return audio.decode(buffer, function(result) {
       return callback(result);
     });
@@ -84,6 +100,10 @@ exports.main = function() {
   } catch (_error) {}
   if (window.gl) {
     window.quad = new Quad(window.gl);
+    window.floatExt = window.gl.getFloatExtension({
+      require: ['renderable', 'filterable'],
+      prefer: ['single']
+    });
     stddev = gl.getExtension('OES_standard_derivatives');
     fptex = gl.getExtension('OES_texture_float');
     if (!stddev) {

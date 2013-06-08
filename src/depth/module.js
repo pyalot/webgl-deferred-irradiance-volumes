@@ -23,13 +23,13 @@ exports.DepthRender = DepthRender = (function() {
       depthTest: true,
       depthWrite: true,
       filter: blurred ? 'nearest' : 'linear',
-      type: gl.FLOAT
+      type: floatExt.type
     });
     if (blurred) {
       this.blurred = new Blur(gl, {
         width: width,
         height: height,
-        type: gl.FLOAT
+        type: floatExt.type
       });
     }
     this.output = this.blurred ? this.blurred.output : this.direct;
