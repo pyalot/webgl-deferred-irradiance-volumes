@@ -53,7 +53,7 @@ return class Windows
         @show_all = false
         @show_label = false
         @needs_clear = $.browser.mozilla
-        console.log @needs_clear
+        #console.log @needs_clear
 
         @node = new Rendernode @gl,
             front: true

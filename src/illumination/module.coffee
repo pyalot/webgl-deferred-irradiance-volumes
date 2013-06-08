@@ -16,6 +16,8 @@ return class Illumination
         @probesize = 16
 
         @generateProbes()
+
+        floatExt = @gl.getFloatExtension require: ['renderable', 'filterable']
         
         @debug = new Rendernode @gl,
             program: get 'debug.shader'
@@ -24,7 +26,8 @@ return class Illumination
             depthTest: true
             depthWrite: true
             cullFace: 'BACK'
-            type: @gl.FLOAT #maybe, not really essential to scene quality
+            #type: @gl.FLOAT #maybe, not really essential to scene quality
+            type: floatExt.type
         
         @lightprobes = new Rendernode @gl,
             width: @probesize*6
@@ -32,7 +35,8 @@ return class Illumination
             program: get 'transfer.shader'
             drawable: quad
             filter: 'nearest'
-            type: @gl.FLOAT #float is required due to HDR, maybe could solve this with color packing
+            #type: @gl.FLOAT #float is required due to HDR, maybe could solve this with color packing
+            type: floatExt.type
 
         @coefficients = new Rendernode @gl,
             width: 9
@@ -40,7 +44,8 @@ return class Illumination
             program: get 'harmonics.shader'
             drawable: quad
             filter: 'nearest'
-            type: @gl.FLOAT #float is required, otherwise bad banding and wrong colors, maybe could solve this with color packing
+            #type: @gl.FLOAT #float is required, otherwise bad banding and wrong colors, maybe could solve this with color packing
+            type: floatExt.type
         
         @direct_light = new LightmapShadowMap gl,
             drawable: model
@@ -54,7 +59,8 @@ return class Illumination
             height: 256
             program: get 'bounce.shader'
             drawable: new BounceModel @gl, model, @probes
-            type: @gl.FLOAT #float is required due to additive blending
+            #type: @gl.FLOAT #float is required due to additive blending
+            type: floatExt.type
             blend: 'additive'
 
         @renderProbes(model, highresmodel)

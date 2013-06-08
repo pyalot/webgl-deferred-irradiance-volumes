@@ -8,14 +8,18 @@ Blur = require('/blur');
 return SSAO = (function() {
 
   function SSAO(gl, normaldepth) {
+    var floatExt;
     this.normaldepth = normaldepth;
+    floatExt = gl.getFloatExtension({
+      require: ['renderable', 'filterable']
+    });
     this.moments = new Rendernode(gl, {
       program: get('moments.shader'),
-      type: gl.FLOAT,
+      type: floatExt.type,
       drawable: quad
     });
     this.blur = new Blur(gl, {
-      type: gl.FLOAT
+      type: floatExt.type
     });
     this.output = new Rendernode(gl, {
       program: get('ssao.shader'),

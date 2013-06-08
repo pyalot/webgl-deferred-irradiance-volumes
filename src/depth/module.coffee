@@ -5,6 +5,8 @@ exports.DepthRender = class DepthRender
     constructor: (gl, width, height, drawable, {blurred}={}) ->
         blurred ?= false
 
+        floatExt = gl.getFloatExtension require: ['renderable', 'filterable']
+
         @direct = new Rendernode gl,
             width: width
             height: height
@@ -14,14 +16,16 @@ exports.DepthRender = class DepthRender
             depthTest: true
             depthWrite: true
             filter: if blurred then 'nearest' else 'linear'
-            type: gl.FLOAT #float is required because of depth precision
+            #type: gl.FLOAT #float is required because of depth precision
+            type: floatExt.type
             cullFace: 'BACK'
        
         if blurred
             @blurred = new Blur gl,
                 width: width
                 height: height
-                type: gl.FLOAT
+                #type: gl.FLOAT
+                type: floatExt.type
 
         @output = if @blurred then @blurred.output else @direct
 

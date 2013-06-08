@@ -194,7 +194,7 @@ makeStat = function(mode, offset) {
 exports.Application = (function() {
 
   function _Class(canvas) {
-    var folder, gui, resmap,
+    var floatExt, folder, gui, resmap,
       _this = this;
     this.canvas = canvas;
     this.update = __bind(this.update, this);
@@ -269,6 +269,9 @@ exports.Application = (function() {
     });
     this.sponza = new Model(gl);
     this.lowres = new LowresModel(gl);
+    floatExt = gl.getFloatExtension({
+      require: ['renderable', 'filterable']
+    });
     this.view_normaldepth = new Rendernode(gl, {
       program: get('normaldepth.shader'),
       drawable: this.sponza,
@@ -276,7 +279,8 @@ exports.Application = (function() {
       depthTest: true,
       depthWrite: true,
       cullFace: 'BACK',
-      type: gl.FLOAT,
+      type: floatExt.type,
+      filter: 'nearest',
       hdrClear: true
     });
     this.ssao = new SSAO(gl, this.view_normaldepth);
@@ -302,7 +306,7 @@ exports.Application = (function() {
       drawable: new DeferredModel(gl, this.illumination.probes),
       cullFace: 'FRONT',
       blend: 'additive',
-      type: gl.FLOAT,
+      type: floatExt.type,
       depthBuffer: this.view_normaldepth.depth,
       depthWrite: false,
       depthTest: 'GEQUAL'

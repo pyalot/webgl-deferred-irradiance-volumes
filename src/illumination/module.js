@@ -16,6 +16,7 @@ BounceModel = require('bounce_model');
 return Illumination = (function() {
 
   function Illumination(gl, sun, lighting, model, highresmodel, normaldepth, orientation, elevation, shconst) {
+    var floatExt;
     this.gl = gl;
     this.lighting = lighting;
     this.shconst = shconst;
@@ -24,6 +25,9 @@ return Illumination = (function() {
     this.mapsize = 32;
     this.probesize = 16;
     this.generateProbes();
+    floatExt = this.gl.getFloatExtension({
+      require: ['renderable', 'filterable']
+    });
     this.debug = new Rendernode(this.gl, {
       program: get('debug.shader'),
       drawable: new Sphere(this.gl, 0.6),
@@ -31,7 +35,7 @@ return Illumination = (function() {
       depthTest: true,
       depthWrite: true,
       cullFace: 'BACK',
-      type: this.gl.FLOAT
+      type: floatExt.type
     });
     this.lightprobes = new Rendernode(this.gl, {
       width: this.probesize * 6,
@@ -39,7 +43,7 @@ return Illumination = (function() {
       program: get('transfer.shader'),
       drawable: quad,
       filter: 'nearest',
-      type: this.gl.FLOAT
+      type: floatExt.type
     });
     this.coefficients = new Rendernode(this.gl, {
       width: 9,
@@ -47,7 +51,7 @@ return Illumination = (function() {
       program: get('harmonics.shader'),
       drawable: quad,
       filter: 'nearest',
-      type: this.gl.FLOAT
+      type: floatExt.type
     });
     this.direct_light = new LightmapShadowMap(gl, {
       drawable: model,
@@ -61,7 +65,7 @@ return Illumination = (function() {
       height: 256,
       program: get('bounce.shader'),
       drawable: new BounceModel(this.gl, model, this.probes),
-      type: this.gl.FLOAT,
+      type: floatExt.type,
       blend: 'additive'
     });
     this.renderProbes(model, highresmodel);

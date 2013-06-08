@@ -37,8 +37,9 @@ fragment:
         vec3 normal = normalize(vNormal);
         float bumpheight = texture2D(bumpmap, vTexcoord).r;
         vec3 perturbed_normal = perturbedNormal(normal, bumpheight/96.0);
+        float depth = length(vViewPosition);
         vec3 eye_dir = normalize(vViewPosition);
         float displacement = dot(eye_dir, -(view_rot*normal)) * bumpheight*0.05;
 
-        gl_FragColor = vec4(perturbed_normal, length(vViewPosition)-displacement);
+        gl_FragColor = vec4(perturbed_normal, depth-displacement);
     }

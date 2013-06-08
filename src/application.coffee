@@ -199,6 +199,9 @@ exports.Application = class
         @sponza = new Model gl
         @lowres = new LowresModel gl
 
+        floatExt = gl.getFloatExtension require: ['renderable', 'filterable']
+        #highQualityExt = gl.getFloatExtension require: ['renderable', 'single']
+
         @view_normaldepth = new Rendernode gl,
             program: get 'normaldepth.shader'
             drawable: @sponza
@@ -206,7 +209,10 @@ exports.Application = class
             depthTest: true
             depthWrite: true
             cullFace: 'BACK' #disabled because of mesh gaps
-            type: gl.FLOAT #float is required to avoid banding issues (tried packing, doesn't come out well)
+            #type: gl.FLOAT #float is required to avoid banding issues (tried packing, doesn't come out well)
+            type: floatExt.type
+            #type: highQualityExt.type
+            filter: 'nearest'
             hdrClear: true
 
         @ssao = new SSAO gl, @view_normaldepth
@@ -236,7 +242,8 @@ exports.Application = class
             drawable: new DeferredModel gl, @illumination.probes
             cullFace: 'FRONT'
             blend: 'additive'
-            type: gl.FLOAT #float is required because of additive summation, does not yield a perf benefit
+            #type: gl.FLOAT #float is required because of additive summation, does not yield a perf benefit
+            type: floatExt.type,
             depthBuffer: @view_normaldepth.depth # early z gives some performance
             depthWrite: false
             depthTest: 'GEQUAL'
@@ -250,6 +257,7 @@ exports.Application = class
         @windows = new Windows gl, gui, [
                 {label: 'Scene depth from sun', affine: [1, 0], gamma: false, tex: @direct_light.depth.output},
                 {label: 'Scene normal/depth', affine: [0.5, 0.5], gamma: false, tex: @view_normaldepth},
+                #{label: 'Scene normal/depth', affine: [0.1, 0.0], gamma: false, tex: @view_normaldepth},
                 {label: 'Scene depth moments', gamma: false, tex: @ssao.blur.output},
                 {label: 'Direct Illumination Lightmap', tex: @illumination.direct_light.output},
                 {label: 'Global Illumination Lightmap', diva: true, tex: @illumination.bounce},

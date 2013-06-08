@@ -8,11 +8,14 @@ Blur = require('/blur');
 exports.DepthRender = DepthRender = (function() {
 
   function DepthRender(gl, width, height, drawable, _arg) {
-    var blurred;
+    var blurred, floatExt;
     blurred = (_arg != null ? _arg : {}).blurred;
     if (blurred == null) {
       blurred = false;
     }
+    floatExt = gl.getFloatExtension({
+      require: ['renderable', 'filterable']
+    });
     this.direct = new Rendernode(gl, {
       width: width,
       height: height,
@@ -22,14 +25,14 @@ exports.DepthRender = DepthRender = (function() {
       depthTest: true,
       depthWrite: true,
       filter: blurred ? 'nearest' : 'linear',
-      type: gl.FLOAT,
+      type: floatExt.type,
       cullFace: 'BACK'
     });
     if (blurred) {
       this.blurred = new Blur(gl, {
         width: width,
         height: height,
-        type: gl.FLOAT
+        type: floatExt.type
       });
     }
     this.output = this.blurred ? this.blurred.output : this.direct;
